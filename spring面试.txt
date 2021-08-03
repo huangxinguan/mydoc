@@ -1,0 +1,117 @@
+一、为什么我们使用spring
+没有spring的时候，处理对象依赖问题，是在内部进行new()操作
+比如：A->B->D, B->C->D, C->D
+则：
+A new B()  new D();
+B new C()  new D();
+C new D().
+当有成千上万个对象时，面临的问题是：
+1、依赖对象频繁的创建
+2、依赖关系复杂，程序员处理起来麻烦。
+如何解决?。
+1、依赖对象频繁的创建，spring IOC使用是单例， 工厂模式，创建对象使用newIntance, 反射模式。
+2、依赖关系复杂， 采用外部传入参数方式
+a、构造器传参数   b、方法传参   c、属性反射 fild.set(x)
+
+IOC怎么做？
+1、beanFactory  2、singletonObjects 单例对象池
+2、依赖注入
+a、构造器传参数   b、方法传参   c、属性反射 fild.set(x)。
+
+IOC设计理念：统一bean的构建， 管理生命周期，自动维护bean的依赖关系
+
+思考？beanFactory是怎么生成对象的？
+
+<bean id="" name="" class="" init-method="">
+
+bean,bean的属性，元数据是通过什么对象来承载的？
+
+BeanDefinition(bean的定义) 承载bean的属性信息
+
+BeanDefinitionRegistry(bean的定义注册器) bean的id作为key注册 继承AliasRegistry
+
+AliasRegistry (别名注册器) bean的name作为key注册
+
+Beanfactory (bean工厂)生产bean
+
+Beanfactory.getBean("") //id name获取 
+
+
+spring中装备bean方式
+a、xml
+b、FactoryBean
+c、@compoent(@controller, @service)
+d、@Bean 
+e、@import
+
+
+IOC容器启动做了什么事情
+生成BeanFactory,解析注解，注2册bean，生成单例bean(非懒加载)
+创建bean的流程，反射
+
+#启动容器
+1、生成BeanFactory
+2、注册到容器中，bean工厂通过注册器找到对应bean
+3、工厂创建bean，从缓存中拿，没有则创建bean
+4、创建bean过程中，对象属性填充，依赖对象注入，对象初始化，生成代理对象
+AbstractApplicationContext#fresh
+#创建bean工厂
+ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory()
+
+#依靠beanFactory getBean
+DefaultListableBeanFactory#preInstantiateSingletons
+AbstractFactory#getBean
+AbstractBeanFactory#doGetBean
+
+#先从单例对象池singletonObjects获取，有，直接返回，没有去处理创建逻辑
+Object sharedInstance = getSingleton(beanName)
+
+#创建bean
+#AbstractBeanFactory#createBean
+#AbstractAutowiredCapableBeanFactory#doCreateBean
+#创建bean实例
+AbstractAutowiredCapableBeanFactory#createBeanInstance
+
+#通过反射生成bean
+BeanUtils#instantiateClass
+
+#填充属性，注入依赖(getBean(),先从singletonObjects获取，没有就创建)
+populateBean(beanName, mbd, instanceWrapper)
+
+
+初始化bean
+AbstractAutowiredCapableBeanFactory#initializeBean
+AbstractBeanFactory#getObjectForBeanInstance
+
+FactoryBean 和 beanFactory区别
+!(beanInstance instanceof FactoryBean) || BeanFactoryUtils.isFactoryDereference(name)
+不是factoryBean 直接返回，factorybean类型，看第二个条件，第二个条件中，name.startsWith("&"),直接返回， 否则getObject() 
+
+bean生命周期：创建(newInstance)  填充属性，注入依赖   初始化   销毁(单例)
+
+二、Spring提供了几种方式管理bean的生命周期？有什么区别？
+1、xml init-method ="" destory-method = ''
+等同注解@bean(initMethod = "", destoryMethod = "")
+2、实现接口InitializingBean, DisposableBean
+3、jdk规范 @PostConstruct @PreDestory  
+初始化，调用顺序不一样
+1、@PostConstruct，invokeInitMethods(beanName, wrappedBean, mbd)之前调用
+2、implements InitializingBean,AbstractAutowiredCapableBeanFactory#invokeInitMethods中调用
+3、AbstractAutowiredCapableBeanFactory#invokeInitMethods 中调用的
+销毁的先后顺序
+@PreDestory
+DisposableBean
+xml,注解bean配置的
+
+
+
+三、什么是AOP
+与OOP相比，AOP是处理一些横其切行问题。这些横切性问题不会影响到主逻辑的实现，但是会散落到代码的各个部分，难以维护。AOP就是把这些问题和主业务逻辑分开，达到与主业务逻辑解耦的目的。
+传统的OOP是自上而下的逻辑开发。
+技术本质-》实现
+1、cglib
+2、jdk代理
+spring5以后默认的是cglib代理，之前是jdk，
+
+
+
